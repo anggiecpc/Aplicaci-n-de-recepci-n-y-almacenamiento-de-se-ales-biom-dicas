@@ -10,7 +10,7 @@ from flask import Flask, jsonify
 from datetime import timedelta
 
 # Configura el host y el puerto del servidor
-HOST = '172.16.249.132'  # Cambia esto por la dirección IP del servidor
+HOST = '192.168.1.107'  # Cambia esto por la dirección IP del servidor
 PORT = 49152  # Puerto del servidor
 
 # Ruta de la carpeta donde se guardarán los archivos JSON
