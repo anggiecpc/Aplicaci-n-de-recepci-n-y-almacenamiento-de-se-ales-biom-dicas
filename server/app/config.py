@@ -14,7 +14,7 @@ HOST = '192.168.1.107'  # Cambia esto por la dirección IP del servidor
 PORT = 49152  # Puerto del servidor
 
 # Ruta de la carpeta donde se guardarán los archivos JSON
-FOLDER_PATH = "C:\\Users\\anggi\\OneDrive\\Escritorio\\GIT\\Aplicación de recepción y almacenamiento de señales biomédicas\\received_data"
+FOLDER_PATH = "C:\\Users\\anggi\\OneDrive\\Escritorio\\GIT\\proyecto_biomedico\\server\\received_data"
 
 # Ruta del archivo de registro de archivos procesados
 PROCESSED_FILES_LOG = os.path.join(FOLDER_PATH, "processed_files.log")
