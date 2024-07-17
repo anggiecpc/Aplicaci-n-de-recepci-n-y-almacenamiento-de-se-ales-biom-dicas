@@ -11,11 +11,14 @@ import os
 import socket
 import json
 from threading import Thread
+from watchdog.observers import Observer
 from flask import Flask, jsonify
-from app.database import get_last_batch_numbers, insert_data_to_mysql
+from app.database import get_last_batch_number_by_id, insert_data_to_mysql
 from app.config import HOST, PORT, FOLDER_PATH
+from app.handler import MyHandler
 from concurrent.futures import ThreadPoolExecutor
 from app import app
+import time
 
 def handle_connection(connection, address):
     print('Conexión entrante desde', address)
@@ -90,6 +93,21 @@ def start_server():
                 except KeyboardInterrupt:
                     print("Servidor detenido por el usuario.")
                     break
+
+# Función para iniciar el monitor de la carpeta
+def start_monitor():
+    event_handler = MyHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=FOLDER_PATH, recursive=True)
+    observer.start()
+    print(f'Monitoreando cambios en la carpeta: {FOLDER_PATH}')
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
 @app.route('/')
 def index():

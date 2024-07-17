@@ -8,7 +8,7 @@ import threading
 import time
 
 # Configura el host y el puerto del servidor al que te conectarás
-HOST = '192.168.1.107'  # Cambia esto por la dirección IP del servidor
+HOST = '172.16.254.39'  # Cambia esto por la dirección IP del servidor
 PORT = 49152  # Puerto del servidor
 
 # Variable global para controlar el estado del envío de datos
@@ -163,7 +163,7 @@ def restart_script():
 
 if __name__ == "__main__":
     # Ruta al archivo CSV
-    csv_file_path =  "C:\\Users\\anggi\\OneDrive\\Escritorio\\GIT\\Aplicación de recepción y almacenamiento de señales biomédicas\\Paciente 123.csv"
+    csv_file_path =  "C:\\Users\\anggi\\OneDrive\\Escritorio\\GIT\\proyecto_biomedico\\cliente\\Paciente 123.csv"
 
     # Obtener el ID del equipo desde el archivo CSV
     with open(csv_file_path, 'r', newline='', encoding='utf-8-sig') as csv_file:

@@ -10,7 +10,7 @@ Created on Wed Jul 17 13:59:32 2024
 import os
 
 # Configura el host y el puerto del servidor
-HOST = '192.168.1.107'  # Cambia esto por la dirección IP del servidor
+HOST = '172.16.254.39'  # Cambia esto por la dirección IP del servidor
 PORT = 49152  # Puerto del servidor
 
 # Ruta de la carpeta donde se guardarán los archivos JSON

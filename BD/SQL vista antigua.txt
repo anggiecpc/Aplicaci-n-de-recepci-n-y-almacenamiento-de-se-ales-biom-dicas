@@ -1,0 +1,49 @@
+-- Obtener todas las consultas SELECT para las tablas que comienzan con 'equipo_'
+SELECT GROUP_CONCAT(CONCAT('SELECT * FROM ', table_name) SEPARATOR ' UNION ALL ') INTO @tables_to_union
+FROM information_schema.tables
+WHERE table_schema = 'bdseñales1lineaporeq'
+AND table_name LIKE 'equipo_%';
+
+-- Construir la consulta para crear la vista
+SET @view_query = CONCAT(
+  'CREATE OR REPLACE VIEW paciente_mediciones AS
+  SELECT
+      p.ID_paciente,
+      p.Nombre_completo,
+      p.Edad,
+      p.Fecha_ingreso,
+      p.Fecha_salida,
+      p.Hora_ingreso,
+      p.Hora_salida,
+      e.numero_lote AS lote,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.IDequipo\')) AS ID_equipo,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.fecha\')) AS fecha_equipo,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.hora\')) AS hora_equipo,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.elapsedtime\')) AS elapsedtime,
+	  JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.unidades\')) AS unidades,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.frecuencia\')) AS frecuencia,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.ECG\')) AS ECG,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.PPG\')) AS PPG,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.Resp\')) AS Resp,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.Spo2\')) AS Spo2,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.temp\')) AS temp,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.SIS\')) AS SIS,
+      JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.DIA\')) AS DIA
+  FROM
+      metadatos p
+  JOIN (', @tables_to_union, ') e 
+  ON p.ID_equipo = JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.IDequipo\'))
+  AND STR_TO_DATE(CONCAT(JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.fecha\')), \' \', JSON_UNQUOTE(JSON_EXTRACT(e.datos, \'$.hora\'))), \'%Y-%m-%d %H:%i:%s\') 
+  BETWEEN STR_TO_DATE(CONCAT(p.Fecha_ingreso, \' \', p.Hora_ingreso), \'%Y-%m-%d %H:%i:%s\')
+  AND STR_TO_DATE(CONCAT(p.Fecha_salida, \' \', p.Hora_salida), \'%Y-%m-%d %H:%i:%s\')
+  ORDER BY
+    p.ID_paciente, e.numero_lote'
+);
+
+-- Verificar la consulta generada
+SELECT @view_query;
+
+-- Ejecutar la consulta para crear o reemplazar la vista
+PREPARE stmt FROM @view_query;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

@@ -1,0 +1,5 @@
+CREATE TABLE registros (
+    numero_lote INT PRIMARY KEY UNIQUE,
+    ID_equipo VARCHAR(10),
+    datos  JSON NOT NULL
+);
