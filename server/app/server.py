@@ -56,10 +56,7 @@ def handle_connection(connection, address):
                 print("No se encontró el número de lote en los datos recibidos.")
                 return
 
-            equipo_folder_path = os.path.join(FOLDER_PATH, IDequipo)
-            if not os.path.exists(equipo_folder_path):
-                os.makedirs(equipo_folder_path)
-
+            equipo_folder_path = FOLDER_PATH
             base_file_name = f"data_lote_{n_lote}.json"
             file_name = os.path.join(equipo_folder_path, base_file_name)
 

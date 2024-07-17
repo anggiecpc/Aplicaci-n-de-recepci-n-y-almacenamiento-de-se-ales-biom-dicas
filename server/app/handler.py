@@ -34,6 +34,8 @@ class MyHandler(FileSystemEventHandler):
                 print(f'Datos JSON leídos: {json_data}')
 
             n_lote = json_data.get('n lote')
+            ID_equipo = json_data.get('IDequipo')
+
             datos = {
                 "IDequipo": json_data.get('IDequipo'),
                 "fecha": json_data.get('fecha'),
@@ -53,9 +55,9 @@ class MyHandler(FileSystemEventHandler):
             json_row = json.dumps(datos)
             print(f'Datos convertidos a JSON: {json_row}')
 
-            table_name = f"equipo_{datos['IDequipo']}"
-            insert_data_to_mysql(n_lote, json_row, table_name)
-            print(f'Datos insertados en la base de datos: Lote {n_lote}')
+            table_name = "registros"
+            insert_data_to_mysql(n_lote,ID_equipo, json_row, table_name)
+            print(f'Datos insertados en la base de datos: Lote {n_lote}, ID {ID_equipo} ')
             
         except Exception as e:
             print(f"Error: {e}")
