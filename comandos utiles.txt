@@ -1,4 +1,4 @@
-cd "C:\Users\anggi\OneDrive\Escritorio\GIT\Aplicación de recepción y almacenamiento de señales biomédicas"
+cd "C:\Users\anggi\OneDrive\Escritorio\GIT\proyecto_biomedico"
 git add .
 git commit -m "Añadir todos los archivos de Python"
 git push -u origin main
