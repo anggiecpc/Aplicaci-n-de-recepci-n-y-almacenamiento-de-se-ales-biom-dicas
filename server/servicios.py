@@ -206,15 +206,17 @@ def start_server():
                         if not chunk:
                             break  # Si no hay datos, salir del bucle
                         data_received += chunk
+
                     json_received = data_received.decode("utf-8")
-                    print(f'Datos recibidos: {json_received}')  # Añade esta línea para depuración
+                    print(f'Datos recibidos: {json_received}')
 
                     try:
                         data = json.loads(json_received)
                         connection.sendall('Datos recibidos con éxito. ¡Gracias!'.encode('utf-8'))
                     except json.JSONDecodeError:
-                        print("Error: Datos recibidos no son un JSON válido.")
-                        connection.sendall('Error: Datos recibidos no son un JSON válido.'.encode('utf-8'))
+                        error_msg = 'Error: Datos recibidos no son un JSON válido.'
+                        print(error_msg)
+                        connection.sendall(error_msg.encode('utf-8'))
                         continue
 
                     if not os.path.exists(folder_path):
@@ -223,13 +225,17 @@ def start_server():
                     # Obtener el ID del equipo
                     IDequipo = data.get("IDequipo")
                     if not IDequipo:
-                        print("No se encontró el ID del equipo en los datos recibidos.")
+                        error_msg = "Error: No se encontró el ID del equipo en los datos recibidos."
+                        print(error_msg)
+                        connection.sendall(error_msg.encode('utf-8'))
                         continue
 
                     # Obtener el número de lote
                     n_lote = data.get("n lote")
                     if not n_lote:
-                        print("No se encontró el número de lote en los datos recibidos.")
+                        error_msg = "Error: No se encontró el número de lote en los datos recibidos."
+                        print(error_msg)
+                        connection.sendall(error_msg.encode('utf-8'))
                         continue
 
                     # Crear una subcarpeta basada en el ID del equipo
@@ -250,7 +256,7 @@ def start_server():
                     # Guardar los datos recibidos en el archivo
                     with open(file_name, 'w') as file:
                         json.dump(data, file, indent=2)
-                        file.write("\n")  # Añadir una nueva línea para separar los datos
+                        file.write("\n")
 
                     print("Datos guardados en", file_name)
 
@@ -258,6 +264,13 @@ def start_server():
                 print('Conexión cerrada por el host remoto. Continuando...')
             except socket.timeout:
                 print("Tiempo de espera agotado. Continuando...")
+            except Exception as e:
+                error_msg = f"Error inesperado: {e}"
+                print(error_msg)
+                if connection:
+                    connection.sendall(error_msg.encode('utf-8'))
+
+
 
 
 # Función para procesar archivos existentes en la carpeta
@@ -344,6 +357,7 @@ def datos_paciente_por_rut(rut):
     return jsonify({'columnas': columnas, 'filas': datos})
 
 
+# Iniciar el servidor
 if __name__ == "__main__":
     # Procesar archivos existentes en la carpeta
     process_existing_files()
@@ -365,49 +379,3 @@ if __name__ == "__main__":
     # Iniciar el monitor de la carpeta en el hilo principal
     start_monitor()
 
-
-# #ELIMINAR TABLAS
-
-# import mysql.connector
-
-# # Configuración de la conexión a MySQL
-# mysql_config = {
-#     "host": "localhost",
-#     "user": "root",
-#     "password": "Dolasso.2015",
-#     "database": "bdseñales1lineaporeq"
-# }
-
-# def obtener_tablas():
-#     conn = mysql.connector.connect(**mysql_config)
-#     cursor = conn.cursor()
-#     cursor.execute("SHOW TABLES")
-#     tablas = [tabla[0] for tabla in cursor.fetchall()]
-#     cursor.close()
-#     conn.close()
-#     return tablas
-
-# def eliminar_datos(tabla):
-#     conn = mysql.connector.connect(**mysql_config)
-#     cursor = conn.cursor()
-#     cursor.execute(f"DELETE FROM {tabla}")
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-
-
-
-# def eliminar_datos_de_todas_las_tablas():
-#     tablas = obtener_tablas()
-#     for tabla in tablas:
-#         if tabla.lower() == 'paciente_mediciones':
-#             continue  # Saltar la tabla 'metadatos'
-#         if tabla.lower() == 'metadatos':
-#             continue  # Saltar la tabla 'metadatos'
-
-#         print(f"Eliminando datos de la tabla: {tabla}")
-#         eliminar_datos(tabla)
-#     print("Datos eliminados de todas las tablas excepto 'metadatos' y 'paciente_mediciones'.")
-
-# # Ejemplo de uso: eliminar todos los datos de todas las tablas excluyendo vistas
-# eliminar_datos_de_todas_las_tablas()
