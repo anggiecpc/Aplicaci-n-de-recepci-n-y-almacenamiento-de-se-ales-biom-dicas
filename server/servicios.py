@@ -174,105 +174,92 @@ def get_last_batch_numbers():
 
 # Función para iniciar el servidor
 def start_server():
-    # Crear un socket TCP/IP
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        # Enlazar el socket al puerto
-        server_socket.bind((HOST, PORT))
+    while True:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+                server_socket.bind((HOST, PORT))
+                server_socket.listen()
+                server_socket.settimeout(60)
+                print("Servidor escuchando en", HOST, ":", PORT)
 
-        # Empezar a escuchar conexiones entrantes
-        server_socket.listen()
-        server_socket.settimeout(20)
-
-        print("Servidor escuchando en", HOST, ":", PORT)
-
-        while True:
-            try:
-                # Aceptar la conexión entrante
-                connection, address = server_socket.accept()
-                print('Conexión entrante desde', address)
-
-                with connection:
-                    # Obtener el último lote cargado
-                    last_batch_number = get_last_batch_numbers()
-                    print(f"Último lote cargado: {last_batch_number}")
-
-                    # Enviar el número del último lote al cliente
-                    connection.sendall(json.dumps({"ultimo_lote": last_batch_number}).encode('utf-8'))
-
-                    data_received = b''
-                    while True:
-                        # Recibir los datos del cliente
-                        chunk = connection.recv(1024)
-                        if not chunk:
-                            break  # Si no hay datos, salir del bucle
-                        data_received += chunk
-
-                    json_received = data_received.decode("utf-8")
-                    print(f'Datos recibidos: {json_received}')
-
+                while True:
                     try:
-                        data = json.loads(json_received)
-                        connection.sendall('Datos recibidos con éxito. ¡Gracias!'.encode('utf-8'))
-                    except json.JSONDecodeError:
-                        error_msg = 'Error: Datos recibidos no son un JSON válido.'
+                        connection, address = server_socket.accept()
+                        print('Conexión entrante desde', address)
+
+                        with connection:
+                            last_batch_number = get_last_batch_numbers()
+                            print(f"Último lote cargado: {last_batch_number}")
+
+                            connection.sendall(json.dumps({"ultimo_lote": last_batch_number}).encode('utf-8'))
+
+                            data_received = b''
+                            while True:
+                                chunk = connection.recv(1024)
+                                if not chunk:
+                                    break
+                                data_received += chunk
+
+                            json_received = data_received.decode("utf-8")
+                            print(f'Datos recibidos: {json_received}')
+
+                            try:
+                                data = json.loads(json_received)
+                                connection.sendall('Datos recibidos con éxito. ¡Gracias!'.encode('utf-8'))
+                            except json.JSONDecodeError:
+                                error_msg = 'Error: Datos recibidos no son un JSON válido.'
+                                print(error_msg)
+                                connection.sendall(error_msg.encode('utf-8'))
+                                continue
+
+                            if not os.path.exists(folder_path):
+                                os.makedirs(folder_path)
+
+                            IDequipo = data.get("IDequipo")
+                            if not IDequipo:
+                                error_msg = "Error: No se encontró el ID del equipo en los datos recibidos."
+                                print(error_msg)
+                                connection.sendall(error_msg.encode('utf-8'))
+                                continue
+
+                            n_lote = data.get("n lote")
+                            if not n_lote:
+                                error_msg = "Error: No se encontró el número de lote en los datos recibidos."
+                                print(error_msg)
+                                connection.sendall(error_msg.encode('utf-8'))
+                                continue
+
+                            equipo_folder_path = os.path.join(folder_path, IDequipo)
+                            if not os.path.exists(equipo_folder_path):
+                                os.makedirs(equipo_folder_path)
+
+                            base_file_name = f"data_lote_{n_lote}.json"
+                            file_name = os.path.join(equipo_folder_path, base_file_name)
+
+                            counter = 1
+                            while os.path.exists(file_name):
+                                file_name = os.path.join(equipo_folder_path, f"data_lote_{n_lote}_{counter}.json")
+                                counter += 1
+
+                            with open(file_name, 'w') as file:
+                                json.dump(data, file, indent=2)
+                                file.write("\n")
+
+                            print("Datos guardados en", file_name)
+
+                    except ConnectionResetError:
+                        print('Conexión cerrada por el host remoto. Continuando...')
+                    except socket.timeout:
+                        print("Tiempo de espera agotado. Continuando...")
+                    except Exception as e:
+                        error_msg = f"Error inesperado: {e}"
                         print(error_msg)
-                        connection.sendall(error_msg.encode('utf-8'))
-                        continue
+                        if connection:
+                            connection.sendall(error_msg.encode('utf-8'))
 
-                    if not os.path.exists(folder_path):
-                        os.makedirs(folder_path)
-
-                    # Obtener el ID del equipo
-                    IDequipo = data.get("IDequipo")
-                    if not IDequipo:
-                        error_msg = "Error: No se encontró el ID del equipo en los datos recibidos."
-                        print(error_msg)
-                        connection.sendall(error_msg.encode('utf-8'))
-                        continue
-
-                    # Obtener el número de lote
-                    n_lote = data.get("n lote")
-                    if not n_lote:
-                        error_msg = "Error: No se encontró el número de lote en los datos recibidos."
-                        print(error_msg)
-                        connection.sendall(error_msg.encode('utf-8'))
-                        continue
-
-                    # Crear una subcarpeta basada en el ID del equipo
-                    equipo_folder_path = os.path.join(folder_path, IDequipo)
-                    if not os.path.exists(equipo_folder_path):
-                        os.makedirs(equipo_folder_path)
-
-                    # Generar un nombre de archivo basado en el número de lote
-                    base_file_name = f"data_lote_{n_lote}.json"
-                    file_name = os.path.join(equipo_folder_path, base_file_name)
-
-                    # Manejar nombres de archivos duplicados
-                    counter = 1
-                    while os.path.exists(file_name):
-                        file_name = os.path.join(equipo_folder_path, f"data_lote_{n_lote}_{counter}.json")
-                        counter += 1
-
-                    # Guardar los datos recibidos en el archivo
-                    with open(file_name, 'w') as file:
-                        json.dump(data, file, indent=2)
-                        file.write("\n")
-
-                    print("Datos guardados en", file_name)
-
-            except ConnectionResetError:
-                print('Conexión cerrada por el host remoto. Continuando...')
-            except socket.timeout:
-                print("Tiempo de espera agotado. Continuando...")
-            except Exception as e:
-                error_msg = f"Error inesperado: {e}"
-                print(error_msg)
-                if connection:
-                    connection.sendall(error_msg.encode('utf-8'))
-
-
-
-
+        except socket.error as e:
+            print(f"Error del socket: {e}. Reintentando en 5 segundos...")
+            time.sleep(5)
 # Función para procesar archivos existentes en la carpeta
 def process_existing_files():
     handler = MyHandler()
